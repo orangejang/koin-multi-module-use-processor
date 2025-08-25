@@ -135,8 +135,13 @@ class KoinModuleSymbolProcessor(
                         val method = clazz.getMethod("$func")
                         val module = method.invoke(null) as Module
                         modules.add(module)
-                    } catch (e: Exception) {
-                        // 模块加载失败，跳过: ${pkg}.$func
+                        println("成功加载Koin模块: ${pkg}.$func")
+                    } catch (ex: ClassNotFoundException) {
+                        println("类未找到: $className - " + ex.message)
+                    } catch (ex: NoSuchMethodException) {
+                        println("方法未找到: $className.$func - " + ex.message)
+                    } catch (ex: Exception) {
+                        println("模块加载失败: ${pkg}.$func - " + ex.javaClass.simpleName + ": " + ex.message)
                     }
                 """.trimIndent()
                 )
