@@ -77,10 +77,7 @@ afterEvaluate {
         }
 
         repositories {
-            maven {
-                name = 'local'
-                url = uri("${rootProject.buildDir}/repo")
-            }
+            mavenLocal()
         }
     }
 }

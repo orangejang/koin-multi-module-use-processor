@@ -50,4 +50,5 @@ dependencies {
 
 ksp {
     arg("projectDir", rootProject.projectDir.absolutePath)
+    // 不设置koin.collector参数，所以不会生成KoinModules类
 }
