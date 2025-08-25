@@ -1,0 +1,30 @@
+// Top-level build file
+buildscript {
+    ext.kotlin_version = '1.8.0'
+    ext.koin_version = '3.4.0'
+    ext.ksp_version = '1.8.0-1.0.9'
+    
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.1.3'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:$ksp_version"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+// 应用收集 Koin 模块的脚本
+apply from: 'collect_koin_modules.gradle'
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
