@@ -25,9 +25,6 @@ allprojects {
     }
 }
 
-// 应用收集 Koin 模块的脚本
-apply from: 'collect_koin_modules.gradle'
-
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
