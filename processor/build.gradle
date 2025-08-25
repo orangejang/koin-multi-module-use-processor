@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id 'kotlin'
+    id 'maven-publish'
 }
 
 java {
@@ -13,12 +14,39 @@ jar {
 }
 
 dependencies {
-    implementation project(':annotation')
+    // 使用本地仓库的annotation依赖
+    implementation 'com.example:koin-annotation:1.0.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     
     // KSP 依赖
     implementation "com.google.devtools.ksp:symbol-processing-api:$ksp_version"
     
     // 用于代码生成
+    //noinspection NewerVersionAvailable
     implementation 'com.squareup:kotlinpoet:1.12.0'
+}
+
+// 配置发布
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+
+            groupId = 'com.example'
+            artifactId = 'koin-processor'
+            version = '1.0.0'
+
+            pom {
+                name = 'Koin Processor'
+                description = 'Koin模块注解处理器'
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = 'local'
+            url = uri("${rootProject.buildDir}/repo")
+        }
+    }
 }

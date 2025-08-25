@@ -38,9 +38,12 @@ dependencies {
     // Koin 依赖
     implementation "io.insert-koin:koin-android:3.2.0"
     implementation "io.insert-koin:koin-core:3.2.0"
-    
-    // KSP 处理器
-    ksp project(':processor')
+
+    // 使用本地仓库的annotation依赖
+    implementation 'com.example:koin-annotation:1.0.0'
+
+    // 使用本地仓库的KSP处理器
+    ksp 'com.example:koin-processor:1.0.0'
     
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
