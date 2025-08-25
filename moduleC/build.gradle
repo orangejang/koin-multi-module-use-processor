@@ -39,13 +39,6 @@ dependencies {
     implementation "io.insert-koin:koin-android:3.2.0"
     implementation "io.insert-koin:koin-core:3.2.0"
     
-    // 依赖注解模块
-    implementation project(':annotation')
-    
-    // 依赖其他模块，以便能够调用它们的函数
-    implementation project(':moduleA')
-    implementation project(':moduleB')
-    
     // KSP 处理器
     ksp project(':processor')
     
@@ -57,4 +50,33 @@ dependencies {
 // KSP 配置 - 传递项目根目录路径
 ksp {
     arg("projectDir", rootProject.projectDir.absolutePath)
+}
+
+// 配置发布
+apply plugin: 'maven-publish'
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+
+                groupId = 'com.example'
+                artifactId = 'koin-modules-collector'
+                version = '1.0.0'
+
+                pom {
+                    name = 'Koin Modules Collector'
+                    description = 'Koin模块收集器，自动生成KoinModules类'
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                name = 'local'
+                url = uri("${rootProject.buildDir}/repo")
+            }
+        }
+    }
 }

@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id 'kotlin'
+    id 'maven-publish'
 }
 
 java {
@@ -10,4 +11,29 @@ java {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+}
+
+// 配置发布
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+
+            groupId = 'com.example'
+            artifactId = 'koin-annotation'
+            version = '1.0.0'
+
+            pom {
+                name = 'Koin Annotation'
+                description = 'Koin模块注解库'
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = 'local'
+            url = uri("${rootProject.buildDir}/repo")
+        }
+    }
 }
