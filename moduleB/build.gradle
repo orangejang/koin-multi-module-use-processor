@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
+    id 'com.google.devtools.ksp'
 }
 
 android {
@@ -36,10 +37,17 @@ dependencies {
     // 使用本地仓库的annotation依赖
     implementation 'com.example:koin-annotation:1.0.0'
 
+    // KSP 处理器 - 使用源码项目依赖
+    ksp project(':processor')
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "io.insert-koin:koin-android:$koin_version"
     
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
+
+ksp {
+    arg("projectDir", rootProject.projectDir.absolutePath)
 }
