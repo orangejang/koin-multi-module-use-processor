@@ -1,205 +1,224 @@
-# KSP 自动生成 KoinModules 系统 - 完整实现总结
+# Koin Multi-Module Use Processor
 
-## 🎉 项目成功完成！
+一个基于 KSP (Kotlin Symbol Processing) 的 Koin 依赖注入框架扩展项目，用于在多模块 Android 项目中自动收集和管理
+Koin 模块。
 
-本项目成功实现了使用 KSP (Kotlin Symbol Processing) 自动生成 KoinModules.kt 文件的完整系统，能够自动收集所有带有 `@KoinModule` 注解的类。
+## 项目概述
 
-## 📋 系统架构
+本项目提供了一套完整的解决方案，通过注解处理器自动收集各个模块中的 Koin
+模块定义，并生成统一的模块注册代码，简化多模块项目中的依赖注入配置。
 
-### 最终架构设计
-采用 **ModuleC 独立架构**，完美解决了循环依赖问题：
+## 项目结构
 
 ```
-├── annotation/          # @KoinModule 注解定义
-├── processor/           # KSP 处理器实现  
-├── moduleA/            # 业务模块A (包含 moduleAKoin)
-├── moduleB/            # 业务模块B (包含 moduleBKoin)
-├── moduleC/            # 🎯 代码生成模块 (独立子项目)
-│   ├── KSP 配置
-│   ├── moduleCKoin()   # 自己的业务逻辑
-│   └── 生成 KoinModules.kt
-└── app/                # 主应用 (依赖 moduleC)
+koin-multi-module-use-processor/
+├── annotation/                    # 注解定义模块
+│   └── src/main/java/
+│       └── com/example/annotation/
+├── processor/                     # KSP 注解处理器
+│   └── src/main/java/
+│       └── com/example/processor/
+├── app/                          # 主应用模块
+├── moduleA/                      # 示例模块 A
+├── moduleB/                      # 示例模块 B  
+├── moduleC/                      # 示例模块 C
+├── gradle/                       # 公共 Gradle 配置
+│   ├── koin-dependencies.gradle  # Koin 依赖统一配置
+│   └── README.md                # 配置使用指南
+└── README.md         # 项目总结
 ```
 
-### 核心优势
-- ✅ **避免循环依赖**：moduleC 依赖其他模块，但其他模块不依赖 moduleC
-- ✅ **职责分离**：moduleC 专门负责代码生成
-- ✅ **易于使用**：app 通过依赖 moduleC 即可使用生成的代码
-- ✅ **自动化**：完全自动收集和生成，无需手动维护
+## 核心功能
 
-## 🔧 核心组件
+### 1. 自动模块收集
 
-### 1. @KoinModule 注解
-```kotlin
-// annotation/src/main/java/com/example/annotation/KoinModule.kt
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.SOURCE)
-annotation class KoinModule
-```
+- 通过 `@KoinModule` 注解标记需要收集的 Koin 模块
+- KSP 处理器自动扫描所有模块中的注解
+- 生成统一的模块注册代码
 
-### 2. KSP 处理器
-```kotlin
-// processor/src/main/java/com/example/processor/KoinModuleSymbolProcessor.kt
-class KoinModuleSymbolProcessor(
-    private val codeGenerator: CodeGenerator,
-    private val logger: KSPLogger
-) : SymbolProcessor {
-    // 读取收集的模块信息，使用 KotlinPoet 生成代码
+### 2. 多模块支持
+
+- 支持 Android Library 和 Application 模块
+- 自动处理模块间的依赖关系
+- 提供灵活的配置选项
+
+### 3. 统一依赖管理
+
+- 通过公共 Gradle 配置文件统一管理版本
+- 简化新模块的配置过程
+- 确保版本一致性
+
+## 快速开始
+
+### 1. 添加依赖
+
+在模块的 `build.gradle` 文件中添加：
+
+```gradle
+plugins {
+    id 'com.android.library' // 或 'com.android.application'
+    id 'kotlin-android'
+    id 'com.google.devtools.ksp'
+}
+
+// 应用 Koin 依赖配置
+apply from: '../gradle/koin-dependencies.gradle'
+
+dependencies {
+    // 其他依赖...
+    implementation "io.insert-koin:koin-android:$koin_version"
 }
 ```
 
-### 3. Gradle 收集任务
-```kotlin
-// collect_koin_modules.gradle
-task collectKoinModules {
-    // 扫描所有子项目，收集 @KoinModule 注解信息
-    // 输出到 build/generated/koin/koin-modules.txt
-}
-```
+### 2. 使用注解
 
-### 4. 生成的代码
-```kotlin
-// moduleC/build/generated/ksp/debug/kotlin/com/example/koinmodules/KoinModules.kt
-public object KoinModules {
-    public fun getAllModules(): List<Module> = listOf(
-        com.example.modulec.moduleCKoin(),
-        com.example.modulea.moduleAKoin(),
-        com.example.moduleb.moduleBKoin()
-    )
-}
-```
+在你的 Koin 模块中使用 `@KoinModule` 注解：
 
-## 🚀 使用方法
-
-### 1. 添加注解
-在任何模块中创建 Koin 模块函数并添加注解：
 ```kotlin
 @KoinModule
-fun myModuleKoin() = module {
-    single<MyService> { MyServiceImpl() }
+val myModule = module {
+      single<MyRepository> { MyRepositoryImpl() }
+      factory<MyUseCase> { MyUseCaseImpl(get()) }
 }
 ```
 
-### 2. 运行生成
+### 3. 配置处理器
+
+在 app 模块的 `build.gradle` 中配置 KSP 参数：
+
+```gradle
+ksp {
+    arg("koin.modules.collector", "true")
+    arg("koin.modules.package.name", "com.example.modules")
+    arg("koin.modules.file.name", "KoinModules")
+}
+```
+
+### 4. 使用生成的代码
+
+在 Application 中使用自动生成的模块：
+
+```kotlin
+class MyApplication : Application() {
+   override fun onCreate() {
+      super.onCreate()
+
+      startKoin {
+         androidContext(this@MyApplication)
+         modules(KoinModules.allModules)
+      }
+   }
+}
+```
+
+## 版本信息
+
+当前版本：`1.0.1-SNAPSHOT`
+
+### 依赖版本
+
+- Kotlin: 1.8.0
+- Koin: 3.4.0
+- KSP: 1.8.0-1.0.9
+
+## 构建和发布
+
+### 发布到本地仓库
+
 ```bash
-# 收集所有模块
-./gradlew collectKoinModules
+# 发布 annotation 模块
+./gradlew :annotation:publishToMavenLocal
 
-# 生成代码
-./gradlew :moduleC:build
+# 发布 processor 模块  
+./gradlew :processor:publishToMavenLocal
 ```
 
-### 3. 使用生成的代码
-```kotlin
-// 在 Application 中
-startKoin {
-    modules(KoinModules.getAllModules())
-}
+### 构建项目
+
+```bash
+# 清理并构建
+./gradlew clean build
+
+# 运行 KSP 处理器
+./gradlew :app:kspDebugKotlin
 ```
 
-## 📊 技术实现细节
+## 配置选项
 
-### 两阶段构建流程
-1. **收集阶段**：Gradle 任务扫描源码，正则匹配 `@KoinModule` 注解
-2. **生成阶段**：KSP 处理器读取收集信息，使用 KotlinPoet 生成代码
+### KSP 参数
 
-### 关键技术点
-- **跨模块扫描**：Gradle 任务遍历所有子项目源码
-- **正则匹配**：精确识别 `@KoinModule` 注解和函数名
-- **完全限定名调用**：避免导入语句问题
-- **KotlinPoet 代码生成**：生成类型安全的 Kotlin 代码
+| 参数名                         | 描述       | 默认值                   |
+|-----------------------------|----------|-----------------------|
+| `koin.modules.collector`    | 是否启用模块收集 | `false`               |
+| `koin.modules.package.name` | 生成代码的包名  | `com.example.modules` |
+| `koin.modules.file.name`    | 生成文件的类名  | `KoinModules`         |
 
-## 📁 项目结构
-```
-├── annotation/                    # 注解模块
-│   └── src/main/java/com/example/annotation/
-│       └── KoinModule.kt         # @KoinModule 注解定义
-├── processor/                     # KSP 处理器模块
-│   └── src/main/java/com/example/processor/
-│       └── KoinModuleSymbolProcessor.kt
-├── moduleA/                       # 业务模块A
-│   └── src/main/java/com/example/modulea/
-│       └── ModuleAKoin.kt        # @KoinModule fun moduleAKoin()
-├── moduleB/                       # 业务模块B
-│   └── src/main/java/com/example/moduleb/
-│       └── ModuleBKoin.kt        # @KoinModule fun moduleBKoin()
-├── moduleC/                       # 代码生成模块
-│   ├── build.gradle              # KSP 配置
-│   ├── src/main/java/com/example/modulec/
-│   │   └── ModuleCKoin.kt        # @KoinModule fun moduleCKoin()
-│   └── build/generated/ksp/debug/kotlin/com/example/koinmodules/
-│       └── KoinModules.kt        # 🎯 自动生成的文件
-├── app/                          # 主应用
-│   ├── build.gradle              # 依赖 moduleC
-│   └── src/main/java/com/example/koinannotation/
-│       └── MainActivity.kt       # 使用 KoinModules.getAllModules()
-├── build.gradle                  # 根项目配置
-├── collect_koin_modules.gradle   # 收集任务定义
-└── settings.gradle               # 项目设置
-```
+### 注解说明
 
-## 🎯 成功验证
+- `@KoinModule`: 标记需要被收集的 Koin 模块定义
 
-### 构建结果
-- ✅ 成功收集到 3 个模块：`moduleAKoin`、`moduleBKoin`、`moduleCKoin`
-- ✅ KSP 在 moduleC 中成功生成 `KoinModules.kt` 文件
-- ✅ 完整项目构建成功，无循环依赖问题
-- ✅ 生成的代码类型安全，包含完整的包名和函数调用
+## 开发指南
 
-### 生成的文件内容
-```kotlin
-package com.example.koinmodules
+### 添加新模块
 
-import kotlin.collections.List
-import org.koin.core.module.Module
+1. 创建新的 Android Library 模块
+2. 在 `build.gradle` 中应用公共配置：
+   ```gradle
+   apply from: '../gradle/koin-dependencies.gradle'
+   ```
+3. 使用 `@KoinModule` 注解标记你的模块
+4. 重新构建项目
 
-/**
- * 自动生成的Koin模块收集类
- * 包含所有被@KoinModule注解标记的模块
- * 总共收集了 3 个模块
- */
-public object KoinModules {
-  /**
-   * 获取所有Koin模块
-   * @return 所有模块的列表
-   */
-  public fun getAllModules(): List<Module> = listOf(
-          com.example.modulec.moduleCKoin(),
-          com.example.modulea.moduleAKoin(),
-          com.example.moduleb.moduleBKoin()
-      )
-}
-```
+### 自定义处理器
 
-## 🔄 工作流程
+如需自定义处理器行为，可以修改 `processor` 模块中的 `KoinModuleSymbolProcessor.kt` 文件。
 
-### 开发流程
-1. 开发者在任意模块创建 Koin 模块函数
-2. 添加 `@KoinModule` 注解
-3. 运行 `./gradlew collectKoinModules` 收集模块
-4. 运行 `./gradlew :moduleC:build` 生成代码
-5. 在应用中使用 `KoinModules.getAllModules()`
+## 故障排除
 
-### 自动化集成
-- 可以将收集和生成步骤集成到 CI/CD 流程中
-- 支持增量构建，只在源码变化时重新生成
-- 生成的代码包含详细注释和统计信息
+### 常见问题
 
-## 🎉 项目总结
+1. **KSP 处理器未运行**
+   - 确保已应用 `com.google.devtools.ksp` 插件
+   - 检查 KSP 配置参数是否正确
 
-本项目成功实现了一个完整的 KSP 自动代码生成系统，具有以下特点：
+2. **依赖解析失败**
+   - 确保已发布 annotation 和 processor 到本地仓库
+   - 检查版本号是否一致
 
-1. **完全自动化**：无需手动维护模块列表
-2. **类型安全**：生成的代码完全类型安全
-3. **架构清晰**：模块职责分离，避免循环依赖
-4. **易于扩展**：新增模块只需添加注解即可
-5. **生产就绪**：包含完整的错误处理和日志记录
+3. **生成的代码找不到**
+   - 检查 KSP 参数配置
+   - 确认 `koin.modules.collector` 设置为 `true`
 
-这个系统可以直接用于生产环境，大大简化了大型项目中 Koin 模块的管理工作。
+### 调试技巧
 
-## 📚 相关技术
-- Kotlin Symbol Processing (KSP)
-- KotlinPoet 代码生成
-- Gradle 自定义任务
-- Koin 依赖注入框架
-- Android 多模块架构
+- 使用 `--info` 参数查看详细构建日志
+- 检查 `build/generated/ksp/` 目录下的生成文件
+- 使用 `./gradlew :app:dependencies` 查看依赖树
+
+## 贡献指南
+
+1. Fork 本项目
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+## 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+## 更新日志
+
+### v1.0.1-SNAPSHOT
+
+- 迁移到本地仓库依赖
+- 添加公共 Gradle 配置文件
+- 优化模块配置流程
+- 完善文档和使用指南
+
+### v1.0.0
+
+- 初始版本发布
+- 基础的 KSP 注解处理器
+- 多模块支持
+- 自动模块收集功能
