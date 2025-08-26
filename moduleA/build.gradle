@@ -35,10 +35,10 @@ android {
 
 dependencies {
     // 使用本地仓库的annotation依赖
-    implementation 'com.example:koin-annotation:1.0.0'
+    implementation 'com.example:koin-annotation:1.0.1-SNAPSHOT'
 
-    // KSP 处理器 - 使用源码项目依赖
-    ksp project(':processor')
+    // KSP 处理器 - 使用本地仓库依赖
+    ksp 'com.example:koin-processor:1.0.1-SNAPSHOT'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "io.insert-koin:koin-android:$koin_version"

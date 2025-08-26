@@ -35,12 +35,12 @@ android {
 }
 
 dependencies {
-    implementation project(':annotation')
+    implementation 'com.example:koin-annotation:1.0.1-SNAPSHOT'
     implementation project(':moduleA')
     implementation project(':moduleB')
     implementation project(':moduleC')
 
-    ksp project(':processor')
+    ksp 'com.example:koin-processor:1.0.1-SNAPSHOT'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.core:core-ktx:1.9.0'

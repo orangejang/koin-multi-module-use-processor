@@ -21,7 +21,7 @@ publishing {
 
             groupId = 'com.example'
             artifactId = 'koin-annotation'
-            version = '1.0.0'
+            version = '1.0.1-SNAPSHOT'
 
             pom {
                 name = 'Koin Annotation'
