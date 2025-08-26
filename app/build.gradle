@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'com.google.devtools.ksp'
 }
 
 android {
@@ -34,9 +35,12 @@ android {
 }
 
 dependencies {
+    implementation project(':annotation')
     implementation project(':moduleA')
     implementation project(':moduleB')
     implementation project(':moduleC')
+
+    ksp project(':processor')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.core:core-ktx:1.9.0'
@@ -49,5 +53,9 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
+
+ksp {
+    arg("koin.collector", "true")
 }
 

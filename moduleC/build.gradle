@@ -50,11 +50,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
 
-// KSP 配置 - 传递项目根目录路径
-ksp {
-    arg("projectDir", rootProject.projectDir.absolutePath)
-    arg("koin.collector", "true")
-}
+// KSP配置已移至app项目
 
 // 配置发布
 apply plugin: 'maven-publish'

@@ -1,5 +1,6 @@
 package com.example.processor
 
+import com.example.annotation.KoinModule
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
@@ -23,19 +24,15 @@ class KoinModuleSymbolProcessor(
     private val options: Map<String, String>
 ) : SymbolProcessor {
 
-    private val moduleFunctions = mutableListOf<Pair<String, String>>()
-
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val symbols = resolver.getSymbolsWithAnnotation("com.example.annotation.KoinModule")
-        
+        val symbols = resolver.getSymbolsWithAnnotation(KoinModule::class.java.canonicalName)
+
         symbols.forEach { symbol ->
             if (symbol is KSFunctionDeclaration) {
                 val packageName = symbol.packageName.asString()
                 val functionName = symbol.simpleName.asString()
 
                 logger.info("Found @KoinModule function: $packageName.$functionName")
-                moduleFunctions.add(packageName to functionName)
-
                 // 将信息写入共享文件
                 writeToSharedFile(packageName, functionName)
             }
@@ -75,12 +72,12 @@ class KoinModuleSymbolProcessor(
         val shouldGenerateKoinModules = options["koin.collector"] == "true"
 
         if (shouldGenerateKoinModules) {
+            val moduleFunctions = mutableListOf<Pair<String, String>>()
             // 从共享文件读取所有模块信息
             try {
                 val moduleInfoFile = File("build/generated/koin/koin-modules.txt")
                 if (moduleInfoFile.exists()) {
                     val allModuleInfo = moduleInfoFile.readLines()
-                    moduleFunctions.clear() // 清空当前收集的，使用共享文件中的全部信息
 
                     for (line in allModuleInfo) {
                         if (line.isNotBlank() && line.contains(":")) {
@@ -97,19 +94,20 @@ class KoinModuleSymbolProcessor(
             }
 
             // 生成KoinModules类
-            generateKoinModulesClass()
+            generateKoinModulesClass(moduleFunctions)
         } else {
             logger.info("Skipping KoinModules generation (not collector module)")
         }
     }
 
-    private fun generateKoinModulesClass() {
-        val packageName = "com.example.koinmodules"
+    private fun generateKoinModulesClass(moduleFunctions: List<Pair<String, String>>) {
+        val packageName = "com.cvte.ciot.koinmodules"
         val fileName = "KoinModules"
-        
+
+        val moduleClassName = ClassName("org.koin.core.module", "Module")
         val fileBuilder = FileSpec.builder(packageName, fileName)
-            .addImport("org.koin.core.module", "Module")
-        
+            .addImport(moduleClassName.packageName, moduleClassName.simpleName)
+
         val koinModulesClass = TypeSpec.objectBuilder(fileName)
             .addKdoc("自动生成的Koin模块收集类\n")
             .addKdoc("包含所有被@KoinModule注解标记的模块\n")
@@ -117,29 +115,24 @@ class KoinModuleSymbolProcessor(
 
         // 添加getAllModules方法 - 使用反射调用
         val getAllModulesFunc = FunSpec.builder("getAllModules")
-            .returns(LIST.parameterizedBy(ClassName("org.koin.core.module", "Module")))
+            .returns(LIST.parameterizedBy(moduleClassName))
             .addKdoc("获取所有Koin模块\n")
             .addKdoc("@return 所有模块的列表\n")
 
-        // 构建反射调用代码
+        // 构建直接import调用代码（不使用反射）
         if (moduleFunctions.isNotEmpty()) {
             getAllModulesFunc.addStatement("val modules = mutableListOf<Module>()")
 
             moduleFunctions.forEach { (pkg, func) ->
-                // 生成类名：com.example.modulea.ModuleAKoinKt
-                val className = "${pkg}.${func.replaceFirstChar { it.uppercase() }}Kt"
+                // 添加import语句
+                fileBuilder.addImport(pkg, func)
+
+                // 直接调用函数
                 getAllModulesFunc.addStatement(
                     """
                     try {
-                        val clazz = Class.forName("$className")
-                        val method = clazz.getMethod("$func")
-                        val module = method.invoke(null) as Module
-                        modules.add(module)
+                        modules.add($func())
                         println("成功加载Koin模块: ${pkg}.$func")
-                    } catch (ex: ClassNotFoundException) {
-                        println("类未找到: $className - " + ex.message)
-                    } catch (ex: NoSuchMethodException) {
-                        println("方法未找到: $className.$func - " + ex.message)
                     } catch (ex: Exception) {
                         println("模块加载失败: ${pkg}.$func - " + ex.javaClass.simpleName + ": " + ex.message)
                     }
@@ -154,7 +147,7 @@ class KoinModuleSymbolProcessor(
 
         koinModulesClass.addFunction(getAllModulesFunc.build())
         fileBuilder.addType(koinModulesClass.build())
-        
+
         // 写入文件
         try {
             val dependencies = Dependencies(false)
