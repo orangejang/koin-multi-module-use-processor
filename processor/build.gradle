@@ -16,6 +16,7 @@ jar {
 dependencies {
     // 使用本地仓库的annotation依赖
     implementation 'com.example:koin-annotation:1.0.0'
+    implementation "io.insert-koin:koin-core:$koin_version"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     
     // KSP 依赖

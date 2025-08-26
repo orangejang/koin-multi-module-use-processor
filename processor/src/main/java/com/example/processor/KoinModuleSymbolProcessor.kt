@@ -17,6 +17,7 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.LIST
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeSpec
+import org.koin.core.module.Module
 import java.io.File
 
 class KoinModuleSymbolProcessor(
@@ -104,9 +105,9 @@ class KoinModuleSymbolProcessor(
     private fun generateKoinModulesClass(moduleFunctions: List<Pair<String, String>>) {
         val packageName = options["koin.modules.package.name"] ?: "com.cvte.ciot.koin.modules"
         val fileName = options["koin.modules.file.name"] ?: "KoinModules"
-        val moduleClassName = ClassName("org.koin.core.module", "Module")
+        val koinModule = Module::class.java
         val fileBuilder = FileSpec.builder(packageName, fileName)
-            .addImport(moduleClassName.packageName, moduleClassName.simpleName)
+            .addImport(koinModule.packageName, koinModule.simpleName)
 
         val koinModulesClass = TypeSpec.objectBuilder(fileName)
             .addKdoc("自动生成的Koin模块收集类\n")
@@ -115,7 +116,7 @@ class KoinModuleSymbolProcessor(
 
         // 添加getAllModules方法 - 使用反射调用
         val getAllModulesFunc = FunSpec.builder("getAllModules")
-            .returns(LIST.parameterizedBy(moduleClassName))
+            .returns(LIST.parameterizedBy(ClassName(koinModule.packageName, koinModule.simpleName)))
             .addKdoc("获取所有Koin模块\n")
             .addKdoc("@return 所有模块的列表\n")
 
