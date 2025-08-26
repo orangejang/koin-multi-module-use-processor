@@ -10,6 +10,7 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSNode
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -94,19 +95,15 @@ class KoinModuleSymbolProcessor(
             }
 
             // 生成KoinModules类
-            val packageName = options["koin.modules.package.name"] ?: "com.cvte.ciot.koinmodules"
-            val className = options["koin.modules.file.name"] ?: "KoinModules"
-            generateKoinModulesClass(moduleFunctions, packageName, className)
+            generateKoinModulesClass(moduleFunctions)
         } else {
             logger.info("Skipping KoinModules generation (not collector module)")
         }
     }
 
-    private fun generateKoinModulesClass(
-        moduleFunctions: List<Pair<String, String>>,
-        packageName: String,
-        fileName: String
-    ) {
+    private fun generateKoinModulesClass(moduleFunctions: List<Pair<String, String>>) {
+        val packageName = options["koin.modules.package.name"] ?: "com.cvte.ciot.koin.modules"
+        val fileName = options["koin.modules.file.name"] ?: "KoinModules"
         val moduleClassName = ClassName("org.koin.core.module", "Module")
         val fileBuilder = FileSpec.builder(packageName, fileName)
             .addImport(moduleClassName.packageName, moduleClassName.simpleName)
@@ -178,7 +175,33 @@ class KoinModuleSymbolProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
         return KoinModuleSymbolProcessor(
             environment.codeGenerator,
-            environment.logger,
+            object : KSPLogger {
+                override fun error(
+                    message: String,
+                    symbol: KSNode?
+                ) {
+                    println("KoinModuleSymbolProcessor Error: $message")
+                }
+
+                override fun exception(e: Throwable) {
+                    println("KoinModuleSymbolProcessor Exception: ${e.message}")
+                }
+
+                override fun info(message: String, symbol: KSNode?) {
+                    println("KoinModuleSymbolProcessor Info: $message")
+                }
+
+                override fun logging(
+                    message: String,
+                    symbol: KSNode?
+                ) {
+                    println("KoinModuleSymbolProcessor Logging: $message")
+                }
+
+                override fun warn(message: String, symbol: KSNode?) {
+                    println("KoinModuleSymbolProcessor Warn: $message")
+                }
+            },
             environment.options
         )
     }
