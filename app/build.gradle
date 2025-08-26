@@ -4,6 +4,9 @@ plugins {
     id 'com.google.devtools.ksp'
 }
 
+// 应用 Koin 依赖配置
+apply from: '../gradle/koin-dependencies.gradle'
+
 android {
     compileSdkVersion 33
     
@@ -35,12 +38,9 @@ android {
 }
 
 dependencies {
-    implementation 'com.example:koin-annotation:1.0.1-SNAPSHOT'
     implementation project(':moduleA')
     implementation project(':moduleB')
     implementation project(':moduleC')
-
-    ksp 'com.example:koin-processor:1.0.1-SNAPSHOT'
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.core:core-ktx:1.9.0'

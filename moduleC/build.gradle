@@ -4,6 +4,9 @@ plugins {
     id 'com.google.devtools.ksp'
 }
 
+// 应用 Koin 依赖配置
+apply from: '../gradle/koin-dependencies.gradle'
+
 android {
     compileSdk 33
 
@@ -39,11 +42,6 @@ dependencies {
     implementation "io.insert-koin:koin-android:3.2.0"
     implementation "io.insert-koin:koin-core:3.2.0"
 
-    // 使用本地仓库的annotation依赖
-    implementation 'com.example:koin-annotation:1.0.1-SNAPSHOT'
-
-    // 使用本地仓库依赖
-    ksp 'com.example:koin-processor:1.0.1-SNAPSHOT'
     
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

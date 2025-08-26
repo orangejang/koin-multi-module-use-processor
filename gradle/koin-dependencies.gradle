@@ -1,0 +1,30 @@
+// Koin 依赖配置文件
+// 用于统一管理 annotation 和 processor 的依赖版本和配置
+
+ext {
+    // Koin 相关版本配置
+    koinAnnotationVersion = '1.0.1-SNAPSHOT'
+    koinProcessorVersion = '1.0.1-SNAPSHOT'
+    koinGroupId = 'com.example'
+}
+
+// 应用 Koin 依赖的通用配置
+def applyKoinDependencies(Project project) {
+    project.dependencies {
+        // Koin 注解依赖
+        implementation "${koinGroupId}:koin-annotation:${koinAnnotationVersion}"
+
+        // KSP 处理器依赖
+        ksp "${koinGroupId}:koin-processor:${koinProcessorVersion}"
+    }
+}
+
+// 为当前项目应用 Koin 依赖
+if (project.plugins.hasPlugin('com.google.devtools.ksp')) {
+    applyKoinDependencies(project)
+}
+
+// 提供给其他项目使用的扩展方法
+project.ext.applyKoinDependencies = { targetProject ->
+    applyKoinDependencies(targetProject)
+}
