@@ -56,6 +56,8 @@ dependencies {
 }
 
 ksp {
-    arg("koin.collector", "true")
+    arg("koin.modules.collector", "true")
+    arg("koin.modules.package.name", "com.example.modules")
+    arg("koin.modules.file.name", "KoinModules")
 }
 

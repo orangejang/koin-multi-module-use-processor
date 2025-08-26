@@ -69,7 +69,7 @@ class KoinModuleSymbolProcessor(
 
     override fun finish() {
         // 检查是否应该生成KoinModules类（只在moduleC中生成）
-        val shouldGenerateKoinModules = options["koin.collector"] == "true"
+        val shouldGenerateKoinModules = options["koin.modules.collector"] == "true"
 
         if (shouldGenerateKoinModules) {
             val moduleFunctions = mutableListOf<Pair<String, String>>()
@@ -94,16 +94,19 @@ class KoinModuleSymbolProcessor(
             }
 
             // 生成KoinModules类
-            generateKoinModulesClass(moduleFunctions)
+            val packageName = options["koin.modules.package.name"] ?: "com.cvte.ciot.koinmodules"
+            val className = options["koin.modules.file.name"] ?: "KoinModules"
+            generateKoinModulesClass(moduleFunctions, packageName, className)
         } else {
             logger.info("Skipping KoinModules generation (not collector module)")
         }
     }
 
-    private fun generateKoinModulesClass(moduleFunctions: List<Pair<String, String>>) {
-        val packageName = "com.cvte.ciot.koinmodules"
-        val fileName = "KoinModules"
-
+    private fun generateKoinModulesClass(
+        moduleFunctions: List<Pair<String, String>>,
+        packageName: String,
+        fileName: String
+    ) {
         val moduleClassName = ClassName("org.koin.core.module", "Module")
         val fileBuilder = FileSpec.builder(packageName, fileName)
             .addImport(moduleClassName.packageName, moduleClassName.simpleName)

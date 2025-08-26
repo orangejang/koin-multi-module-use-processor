@@ -1,7 +1,7 @@
 package com.example.koinannotation
 
 import android.app.Application
-import com.cvte.ciot.koinmodules.KoinModules
+import com.example.modules.KoinModules
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
