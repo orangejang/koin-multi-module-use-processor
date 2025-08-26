@@ -16,5 +16,5 @@ interface ModuleCService {
 }
 
 class ModuleCServiceImpl : ModuleCService {
-    override fun getServiceName(): String = "ModuleC Service"
+    override fun getServiceName(): String = "ModuleCService"
 }
